@@ -18,7 +18,8 @@ func main() {
 		log.Println("Error initializing scraper: ", err)
 	}
 
-	start := time.Now()
+	startTime := time.Now()
+	log.Printf("Scraping started at %v\n", startTime)
 	s.Run()
-	log.Printf("Scraping completed in %v\n", time.Since(start))
+	log.Printf("Scraping completed in %v\n", time.Since(startTime))
 }
