@@ -16,6 +16,7 @@ func main() {
 	s, err := scraper.NewScraper(baseURL)
 	if err != nil {
 		log.Println("Error initializing scraper: ", err)
+		return
 	}
 
 	startTime := time.Now()
