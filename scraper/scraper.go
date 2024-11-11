@@ -1,9 +1,9 @@
 package scraper
 
 import (
-	"fmt"
 	"net/url"
 	"sync"
+	"log"
 )
 
 type Scraper struct {
@@ -33,6 +33,11 @@ func NewScraper(baseURL string) (*Scraper, error) {
 func (s *Scraper) Run() {
 	s.wg.Add(1)
 	go s.processURL(s.baseURL.String())
+	s.wg.Wait()
+	log.Println("Dead links found:")
+	for _, link := range s.deadLinks {
+		log.Println(link)
+	}
 }
 
 func (s *Scraper) processURL(link string) {
@@ -54,5 +59,25 @@ func (s *Scraper) processURL(link string) {
 	}
 
 	links, err := ParseLinks(link)
-
+	if err != nil {
+		log.Printf("Error parsing links on %s: %v", link, err)
+		return
+	}
+	for _, href := range links {
+		resolvedURL := ResolveURL(s.baseURL, href)
+		if resolvedURL.Host != s.baseURL.Host {
+			s.wg.Add(1)
+			go func(link string) {
+				defer s.wg.Done()
+				if CheckLink(link) {
+					s.mu.Lock()
+					s.deadLinks = append(s.deadLinks, link)
+					s.mu.Unlock()
+				}
+			}(resolvedURL.String())
+		} else {
+			s.wg.Add(1)
+			go s.processURL(resolvedURL.String())
+		}
+	}
 }
