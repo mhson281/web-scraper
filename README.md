@@ -62,13 +62,37 @@ webscraper/
 
 ### How It Works
 
-- Initialize Scraper: The Scraper struct is initialized with a base URL and begins by processing that URL.
-- Link Checking: For each link on the page:
-    - If it’s an external link (a different domain), the scraper checks if it’s dead but does not follow it.
-    - If it’s an internal link (same domain), the scraper recursively follows and checks all links within that page.
-- Concurrency Management: Each link is checked in a separate goroutine. sync.WaitGroup ensures that the main program waits until all goroutines are complete before printing results. sync.Mutex is used to safely update shared resources (visited links and deadLinks).
+1. Initialize Scraper: Start the application by initializing the scraper with the base URL.
 
-Example Output
+2. Process Base URL:
+
+   - Launch the first URL check using a goroutine, adding it to the WaitGroup for concurrency management.
+
+3. Check if Internal or External Link:
+
+    - If the link belongs to the same domain (internal), proceed to Recursively Process Links.
+    - If the link belongs to a different domain (external), proceed to Check Dead Link Status Only.
+
+4. Recursively Process Links (Internal):
+
+    - Parse the page to extract all anchor (<a>) tags.
+    - For each link found, check if it has already been visited.
+    - Launch a new goroutine for each unvisited link, adding it to the WaitGroup and repeating steps for internal and external checks.
+
+5. Check Dead Link Status Only (External):
+
+    - For external links, perform a status check only (do not follow or parse further links).
+    - If the link returns a 4xx or 5xx status, it’s marked as a dead link.
+
+6. Log Dead Links:
+
+  - Each dead link found is added to a deadLinks list, ensuring thread-safe access with a mutex lock.
+
+7. Report Dead Links:
+
+  - Once all links are processed and the WaitGroup count reaches zero, the application outputs all dead links found.
+
+## Example Output
 
 ```plaintext
 Dead links found:
