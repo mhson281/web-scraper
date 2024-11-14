@@ -13,7 +13,7 @@ func CheckLink(link string) bool {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 && resp.StatusCode < 600 {
-		log.Printf("Dead link found: %s, StatusCode: %d", link, resp.Status)
+		log.Printf("Dead link found: %s, StatusCode: %s", link, resp.Status)
 		return true
 	}
 	return false
